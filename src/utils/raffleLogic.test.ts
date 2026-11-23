@@ -3,6 +3,9 @@ import assert from 'node:assert/strict';
 import {
   OFFICIAL_RAFFLE_DATA,
   OFFICIAL_PRIZES,
+  OFFICIAL_SOCIAL_LINKS,
+  OFFICIAL_IMAGES,
+  UNOFFICIAL_PAGE_COPY,
   maskParticipantName,
   isValidExactPeruvianPhone,
   searchParticipantByExactPhone,
@@ -16,6 +19,67 @@ test('official raffle phone numbers and email match exact specification', () => 
   assert.equal(OFFICIAL_RAFFLE_DATA.supportEmail, 'karolinakarleysorteos@gmail.com');
   assert.equal(OFFICIAL_RAFFLE_DATA.companyName, 'Karolina Karley S.A.C.');
   assert.equal(OFFICIAL_RAFFLE_DATA.totalCarsZeroKm, 10);
+});
+
+test('unofficial page copy and verification section follow exact wording without banned terms', () => {
+  assert.equal(UNOFFICIAL_PAGE_COPY.pageTitle, 'Sorteo Navidad: información y búsqueda');
+  assert.equal(
+    UNOFFICIAL_PAGE_COPY.heroSubtitle,
+    'Sorteo anunciado por Karolina Karley (según su anuncio oficial)'
+  );
+  assert.equal(UNOFFICIAL_PAGE_COPY.yapeCardTitle, 'Yape indicado en el anuncio oficial');
+  assert.equal(
+    UNOFFICIAL_PAGE_COPY.yapeVerificationNote,
+    'Verifícalo en el canal oficial antes de depositar'
+  );
+  assert.equal(UNOFFICIAL_PAGE_COPY.accordingToAnnouncementCards.length, 6);
+  assert.equal(UNOFFICIAL_PAGE_COPY.howToVerifySteps.length, 5);
+  assert.equal(UNOFFICIAL_PAGE_COPY.officialTiktokUrl, 'https://www.tiktok.com/@karolinakarley2');
+  assert.equal(UNOFFICIAL_PAGE_COPY.creatorTiktokUrl, 'https://www.tiktok.com/@clipzasos18');
+
+  const combinedText = JSON.stringify(UNOFFICIAL_PAGE_COPY).toLowerCase();
+  assert.equal(combinedText.includes('garantizado'), false);
+  assert.equal(combinedText.includes('100% confiable'), false);
+});
+
+test('every prize has an assigned image and all car prizes are marked as referential', () => {
+  for (const prize of OFFICIAL_PRIZES) {
+    assert.ok(prize.imageUrl.startsWith('/assets/aistudio/'));
+    assert.ok(prize.altText.length > 10);
+    if (prize.category === 'car') {
+      assert.equal(prize.isReferential, true);
+    }
+  }
+  assert.ok(OFFICIAL_IMAGES.ticket.startsWith('/assets/aistudio/'));
+  assert.ok(OFFICIAL_IMAGES.snowman.startsWith('/assets/aistudio/'));
+  assert.ok(OFFICIAL_IMAGES.elf.startsWith('/assets/aistudio/'));
+  assert.ok(OFFICIAL_IMAGES.legalShield.startsWith('/assets/aistudio/'));
+  assert.ok(OFFICIAL_IMAGES.legalDocument.startsWith('/assets/aistudio/'));
+  assert.ok(OFFICIAL_IMAGES.legalCalendar.startsWith('/assets/aistudio/'));
+});
+
+test('official social links match exact provided URLs', () => {
+  assert.equal(OFFICIAL_SOCIAL_LINKS.length, 5);
+  assert.equal(
+    OFFICIAL_SOCIAL_LINKS[0].url,
+    'https://www.instagram.com/channel/AbbqiyhkRSQoUB2c/'
+  );
+  assert.equal(
+    OFFICIAL_SOCIAL_LINKS[1].url,
+    'https://whatsapp.com/channel/0029VbBum7o6RGJQNfeN9o32'
+  );
+  assert.equal(
+    OFFICIAL_SOCIAL_LINKS[2].url,
+    'https://whatsapp.com/channel/0029VbDW25l0LKZ6WPZkLa46'
+  );
+  assert.equal(
+    OFFICIAL_SOCIAL_LINKS[3].url,
+    'https://youtube.com/@karolinakarley12?si=Q-NKWYkkKJc1TJ_W'
+  );
+  assert.equal(
+    OFFICIAL_SOCIAL_LINKS[4].url,
+    'https://www.tiktok.com/@karolinakarley2?_r=1&_t=ZS-9BdxTijyu3t'
+  );
 });
 
 test('car prizes sum up to 10 zero-km cars across 12 total prize cards', () => {

@@ -5,6 +5,7 @@ import {
   ParticipantLookupResult,
   searchParticipantByExactPhone,
 } from '../utils/raffleLogic';
+import { OfficialSocialLinksGrid } from './OfficialSocialLinks';
 
 /**
  * Structure prepared for future activation with strict privacy rules:
@@ -55,7 +56,7 @@ export const ParticipantSearchSection: React.FC = () => {
           </div>
 
           <p className="mb-6 text-base leading-relaxed font-medium text-[#F3E8FF] sm:text-lg">
-            Cuando salga la lista oficial de participantes, aquí podrás comprobar si estás dentro. Te avisaremos en nuestras redes.
+            Cuando salga la lista oficial de participantes, aquí podrás comprobar si estás dentro. Se avisará en las redes oficiales.
           </p>
 
           {/* Search Form: fully designed, visible, and disabled while IS_PARTICIPANT_SEARCH_ACTIVE is false */}
@@ -126,6 +127,14 @@ export const ParticipantSearchSection: React.FC = () => {
             <span>
               Búsqueda privada por coincidencia exacta de celular. Tus datos personales están protegidos.
             </span>
+          </div>
+
+          {/* Official Social Networks Quick Links */}
+          <div className="mt-7 border-t border-[#E9D5FF]/20 pt-6">
+            <p className="mb-3.5 text-center text-sm font-extrabold tracking-wide text-[#FACC15] uppercase">
+              Redes y canales del anuncio oficial
+            </p>
+            <OfficialSocialLinksGrid compact />
           </div>
         </div>
       </div>
