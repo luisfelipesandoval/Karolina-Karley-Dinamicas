@@ -26,6 +26,7 @@ import {
   SnowmanOrnament,
   ElfOrnament,
 } from './components/ChristmasDecorations';
+import { CopyActionButton } from './components/CopyActionButton';
 import { PrizesSection } from './components/PrizesSection';
 import { VerificationSection } from './components/VerificationSection';
 import { ParticipantSearchSection } from './components/ParticipantSearchSection';
@@ -264,28 +265,40 @@ export default function App() {
                 </div>
               </div>
 
-              {/* Card 2: Yape indicado en el anuncio oficial (NO copy button, text only + verification note) */}
+              {/* Card 2: Yape indicado en el anuncio oficial (with Copy button + verification note) */}
               <div className="rounded-3xl border-2 border-[#E9D5FF] bg-white p-6 text-[#230B3F] shadow-2xl sm:p-8">
-                <div className="flex flex-col items-center justify-between gap-4 text-center sm:items-start sm:text-left">
-                  <div className="inline-flex items-center gap-2 text-sm font-black tracking-wider text-[#7E22CE] uppercase">
-                    <Smartphone className="h-5 w-5" aria-hidden="true" />
-                    <span>{UNOFFICIAL_PAGE_COPY.yapeCardTitle}</span>
+                <div className="flex flex-col items-center justify-between gap-6 sm:flex-row">
+                  <div className="text-center sm:text-left">
+                    <div className="inline-flex items-center gap-2 text-sm font-black tracking-wider text-[#7E22CE] uppercase">
+                      <Smartphone className="h-5 w-5" aria-hidden="true" />
+                      <span>{UNOFFICIAL_PAGE_COPY.yapeCardTitle}</span>
+                    </div>
+
+                    <p
+                      data-testid="yape-number-display"
+                      className="font-display mt-2 text-4xl font-black tracking-wider text-[#230B3F] tabular-nums sm:text-5xl"
+                    >
+                      {OFFICIAL_RAFFLE_DATA.yapeNumberFormatted}
+                    </p>
+
+                    <p className="mt-2 text-lg font-extrabold text-[#4C1D95] sm:text-xl">
+                      {OFFICIAL_RAFFLE_DATA.companyName}
+                    </p>
                   </div>
 
-                  <p
-                    data-testid="yape-number-display"
-                    className="font-display text-4xl font-black tracking-wider text-[#230B3F] tabular-nums sm:text-5xl"
-                  >
-                    {OFFICIAL_RAFFLE_DATA.yapeNumberFormatted}
-                  </p>
-
-                  <p className="text-lg font-extrabold text-[#4C1D95] sm:text-xl">
-                    {OFFICIAL_RAFFLE_DATA.companyName}
-                  </p>
-
-                  <div className="mt-1 w-full rounded-2xl border border-[#7E22CE]/25 bg-[#F3E8FF] px-4 py-3 text-sm font-extrabold text-[#3B106C] sm:text-base">
-                    {UNOFFICIAL_PAGE_COPY.yapeVerificationNote}
+                  <div className="flex w-full justify-center sm:w-auto">
+                    <CopyActionButton
+                      valueToCopy={OFFICIAL_RAFFLE_DATA.yapeNumberRaw}
+                      label="Copiar número"
+                      copiedLabel="¡Copiado!"
+                      ariaLabel="Copiar número de Yape indicado en el anuncio oficial 913296033"
+                      variant="purple"
+                    />
                   </div>
+                </div>
+
+                <div className="mt-5 w-full rounded-2xl border border-[#7E22CE]/25 bg-[#F3E8FF] px-4 py-3 text-center text-sm font-extrabold text-[#3B106C] sm:text-left sm:text-base">
+                  {UNOFFICIAL_PAGE_COPY.yapeVerificationNote}
                 </div>
               </div>
             </div>
