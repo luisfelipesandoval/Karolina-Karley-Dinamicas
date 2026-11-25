@@ -10,6 +10,20 @@ export interface ParticipantJsonRecord {
   primera_fecha: string;
 }
 
+export interface TicketDetailEntry {
+  numero: number;
+  secondsFromBase: number;
+  fecha: string;
+  hora: string;
+}
+
+export interface DayTicketSummary {
+  fecha: string;
+  count: number;
+  firstTime: string;
+  lastTime: string;
+}
+
 export interface ParticipantLookupResult {
   status: 'participating' | 'not_found' | 'invalid_query' | 'disabled';
   message: string;
@@ -26,6 +40,15 @@ export const PARTICIPANT_SEARCH_COPY = {
     'No encontramos ese nombre. Revisa cómo te aparece en tu comprobante de Yape o conserva tu captura de pago.',
   fixedFooterDisclaimer:
     'Los nombres aparecen recortados, por lo que puede haber más de una persona con coincidencia. Esta lista no es oficial: proviene del archivo publicado por la organizadora y está actualizada al 23/11/2026. Tu captura de pago es tu comprobante.',
+} as const;
+
+export const PARTICIPANT_DETAIL_COPY = {
+  fixedNotice:
+    'Este nombre aparece recortado, por lo que estos tickets pueden pertenecer a más de una persona. Compara la fecha y la hora con tu comprobante de Yape.',
+  loadError: 'No pudimos cargar el detalle, intenta de nuevo',
+  buttonViewTickets: 'Ver todos los tickets',
+  buttonHideTickets: 'Ocultar tickets',
+  pageSize: 50,
 } as const;
 
 export interface PrizeItem {
@@ -418,4 +441,81 @@ export function filterAndSortParticipants(
     .sort((a, b) => b.tickets - a.tickets)
     .slice(0, 10);
 }
+
+/**
+ * Base timestamp: 12/11/2026 00:00:00 in timezone-independent UTC calendar math.
+ * Converts elapsed seconds into literal DD/MM/YYYY and HH:MM:SS without any local timezone conversion.
+ */
+const BASE_EPOCH_MS = Date.UTC(2026, 10, 12, 0, 0, 0);
+
+export function formatSecondsFromBaseDate(seconds: number): { fecha: string; hora: string } {
+  const dateObj = new Date(BASE_EPOCH_MS + seconds * 1000);
+  const dd = String(dateObj.getUTCDate()).padStart(2, '0');
+  const mm = String(dateObj.getUTCMonth() + 1).padStart(2, '0');
+  const yyyy = dateObj.getUTCFullYear();
+  const hh = String(dateObj.getUTCHours()).padStart(2, '0');
+  const min = String(dateObj.getUTCMinutes()).padStart(2, '0');
+  const ss = String(dateObj.getUTCSeconds()).padStart(2, '0');
+
+  return {
+    fecha: `${dd}/${mm}/${yyyy}`,
+    hora: `${hh}:${min}:${ss}`,
+  };
+}
+
+/**
+ * Converts a list of elapsed seconds into sorted TicketDetailEntry items
+ * ordered from oldest to newest (1 .. N).
+ */
+export function buildTicketDetailEntries(
+  secondsList: ReadonlyArray<number>
+): TicketDetailEntry[] {
+  const sortedSeconds = [...secondsList].sort((a, b) => a - b);
+  return sortedSeconds.map((sec, idx) => {
+    const { fecha, hora } = formatSecondsFromBaseDate(sec);
+    return {
+      numero: idx + 1,
+      secondsFromBase: sec,
+      fecha,
+      hora,
+    };
+  });
+}
+
+/**
+ * Groups sorted TicketDetailEntry items by date (DD/MM/YYYY) in chronological order,
+ * returning the date, ticket count on that day, first ticket time, and last ticket time.
+ */
+export function buildDayTicketSummaries(
+  entries: ReadonlyArray<TicketDetailEntry>
+): DayTicketSummary[] {
+  const map = new Map<string, DayTicketSummary>();
+
+  for (const entry of entries) {
+    const existing = map.get(entry.fecha);
+    if (!existing) {
+      map.set(entry.fecha, {
+        fecha: entry.fecha,
+        count: 1,
+        firstTime: entry.hora,
+        lastTime: entry.hora,
+      });
+    } else {
+      existing.count += 1;
+      existing.lastTime = entry.hora;
+    }
+  }
+
+  return Array.from(map.values());
+}
+
+/**
+ * Checks whether a ticket's time (HH:MM:SS) matches the user's exact/partial time search query.
+ */
+export function doesTicketTimeMatch(ticketHora: string, rawTimeQuery: string): boolean {
+  const cleaned = rawTimeQuery.trim();
+  if (!cleaned) return false;
+  return ticketHora.includes(cleaned);
+}
+
 

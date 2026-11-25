@@ -7,6 +7,7 @@ import {
   OFFICIAL_IMAGES,
   UNOFFICIAL_PAGE_COPY,
   PARTICIPANT_SEARCH_COPY,
+  PARTICIPANT_DETAIL_COPY,
   ParticipantJsonRecord,
   maskParticipantName,
   isValidExactPeruvianPhone,
@@ -15,6 +16,10 @@ import {
   hasMinimumThreeLetters,
   getParticipantFileKey,
   filterAndSortParticipants,
+  formatSecondsFromBaseDate,
+  buildTicketDetailEntries,
+  buildDayTicketSummaries,
+  doesTicketTimeMatch,
 } from './raffleLogic';
 
 test('official raffle phone numbers and email match exact specification', () => {
@@ -193,4 +198,65 @@ test('filterAndSortParticipants matches prefix, sorts descending by tickets, and
     'Los nombres aparecen recortados, por lo que puede haber más de una persona con coincidencia. Esta lista no es oficial: proviene del archivo publicado por la organizadora y está actualizada al 23/11/2026. Tu captura de pago es tu comprobante.'
   );
 });
+
+test('formatSecondsFromBaseDate and buildTicketDetailEntries convert seconds from 12/11/2026 00:00:00 without timezone drift', () => {
+  // 0 seconds => 12/11/2026 00:00:00
+  assert.deepEqual(formatSecondsFromBaseDate(0), {
+    fecha: '12/11/2026',
+    hora: '00:00:00',
+  });
+  // 184 seconds => 12/11/2026 00:03:04
+  assert.deepEqual(formatSecondsFromBaseDate(184), {
+    fecha: '12/11/2026',
+    hora: '00:03:04',
+  });
+
+  // Unsorted input is sorted oldest to newest and numbered 1..N
+  const entries = buildTicketDetailEntries([86400 + 3600, 184, 86400 + 10]);
+  assert.equal(entries.length, 3);
+  assert.deepEqual(entries[0], {
+    numero: 1,
+    secondsFromBase: 184,
+    fecha: '12/11/2026',
+    hora: '00:03:04',
+  });
+  assert.deepEqual(entries[1], {
+    numero: 2,
+    secondsFromBase: 86410,
+    fecha: '13/11/2026',
+    hora: '00:00:10',
+  });
+  assert.deepEqual(entries[2], {
+    numero: 3,
+    secondsFromBase: 90000,
+    fecha: '13/11/2026',
+    hora: '01:00:00',
+  });
+
+  const summaries = buildDayTicketSummaries(entries);
+  assert.deepEqual(summaries, [
+    {
+      fecha: '12/11/2026',
+      count: 1,
+      firstTime: '00:03:04',
+      lastTime: '00:03:04',
+    },
+    {
+      fecha: '13/11/2026',
+      count: 2,
+      firstTime: '00:00:10',
+      lastTime: '01:00:00',
+    },
+  ]);
+
+  assert.equal(doesTicketTimeMatch('00:03:04', '00:03:04'), true);
+  assert.equal(doesTicketTimeMatch('00:03:04', '00:03'), true);
+  assert.equal(doesTicketTimeMatch('00:03:04', ''), false);
+  assert.equal(
+    PARTICIPANT_DETAIL_COPY.fixedNotice,
+    'Este nombre aparece recortado, por lo que estos tickets pueden pertenecer a más de una persona. Compara la fecha y la hora con tu comprobante de Yape.'
+  );
+  assert.equal(PARTICIPANT_DETAIL_COPY.loadError, 'No pudimos cargar el detalle, intenta de nuevo');
+});
+
 
