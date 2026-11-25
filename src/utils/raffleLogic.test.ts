@@ -6,9 +6,15 @@ import {
   OFFICIAL_SOCIAL_LINKS,
   OFFICIAL_IMAGES,
   UNOFFICIAL_PAGE_COPY,
+  PARTICIPANT_SEARCH_COPY,
+  ParticipantJsonRecord,
   maskParticipantName,
   isValidExactPeruvianPhone,
   searchParticipantByExactPhone,
+  normalizeParticipantSearchText,
+  hasMinimumThreeLetters,
+  getParticipantFileKey,
+  filterAndSortParticipants,
 } from './raffleLogic';
 
 test('official raffle phone numbers and email match exact specification', () => {
@@ -58,12 +64,13 @@ test('every prize has an assigned image and all car prizes are marked as referen
   assert.ok(OFFICIAL_IMAGES.legalCalendar.startsWith('/assets/aistudio/'));
 });
 
-test('official social links match exact provided URLs', () => {
+test('official social links match exact provided URLs and clarify announcement attribution', () => {
   assert.equal(OFFICIAL_SOCIAL_LINKS.length, 5);
   assert.equal(
     OFFICIAL_SOCIAL_LINKS[0].url,
     'https://www.instagram.com/channel/AbbqiyhkRSQoUB2c/'
   );
+  assert.equal(OFFICIAL_SOCIAL_LINKS[0].sublabel, 'Canal del anuncio de la organizadora');
   assert.equal(
     OFFICIAL_SOCIAL_LINKS[1].url,
     'https://whatsapp.com/channel/0029VbBum7o6RGJQNfeN9o32'
@@ -125,3 +132,65 @@ test('isValidExactPeruvianPhone requires 9 digits starting with 9', () => {
   assert.equal(isValidExactPeruvianPhone('123456789'), false);
   assert.equal(isValidExactPeruvianPhone('91329603'), false);
 });
+
+test('normalizeParticipantSearchText uppercases, strips tildes and asterisks, and collapses spaces', () => {
+  assert.equal(normalizeParticipantSearchText('  María   Pér*  '), 'MARIA PER');
+  assert.equal(normalizeParticipantSearchText('José   Ángel*'), 'JOSE ANGEL');
+  assert.equal(normalizeParticipantSearchText('Noemí   Muñ*'), 'NOEMI MUÑ');
+  assert.equal(normalizeParticipantSearchText('- manuel   agustín '), '- MANUEL AGUSTIN');
+});
+
+test('hasMinimumThreeLetters enforces at least 3 alphabetical characters', () => {
+  assert.equal(hasMinimumThreeLetters('Ma'), false);
+  assert.equal(hasMinimumThreeLetters('A* '), false);
+  assert.equal(hasMinimumThreeLetters('-- '), false);
+  assert.equal(hasMinimumThreeLetters('Mar'), true);
+  assert.equal(hasMinimumThreeLetters('Maria Per'), true);
+  assert.equal(hasMinimumThreeLetters('- Man'), true);
+});
+
+test('getParticipantFileKey resolves A-Z to letter and non-A-Z to OTROS', () => {
+  assert.equal(getParticipantFileKey('Maria Per'), 'M');
+  assert.equal(getParticipantFileKey('  árbol '), 'A');
+  assert.equal(getParticipantFileKey('zulema'), 'Z');
+  assert.equal(getParticipantFileKey('- MANUEL'), 'OTROS');
+  assert.equal(getParticipantFileKey('& D DECOR'), 'OTROS');
+});
+
+test('filterAndSortParticipants matches prefix, sorts descending by tickets, and limits to 10 results', () => {
+  const records: ParticipantJsonRecord[] = Array.from({ length: 15 }, (_, i) => ({
+    nombre: `MARIA PER${i}*`,
+    tickets: (i + 1) * 5,
+    ultima_fecha: '23/11/2026 20:00:00',
+    primera_fecha: '19/11/2026 10:00:00',
+  }));
+  records.push({
+    nombre: 'MARIO PER*',
+    tickets: 999,
+    ultima_fecha: '23/11/2026 23:00:00',
+    primera_fecha: '19/11/2026 10:00:00',
+  });
+
+  const results = filterAndSortParticipants(records, '  maría   pér* ');
+  assert.equal(results.length, 10);
+  assert.equal(results[0].nombre, 'MARIA PER14*');
+  assert.equal(results[0].tickets, 75);
+  assert.equal(results[9].nombre, 'MARIA PER5*');
+  assert.equal(results[9].tickets, 30);
+
+  // Verify copy strings match exact specification
+  assert.equal(
+    PARTICIPANT_SEARCH_COPY.helpText,
+    'Escríbelo tal como te sale en tu comprobante de Yape: tu primer nombre y las 3 primeras letras de tu apellido. Ejemplo: Maria Per'
+  );
+  assert.equal(PARTICIPANT_SEARCH_COPY.loadError, 'No pudimos cargar la lista, intenta de nuevo');
+  assert.equal(
+    PARTICIPANT_SEARCH_COPY.noMatches,
+    'No encontramos ese nombre. Revisa cómo te aparece en tu comprobante de Yape o conserva tu captura de pago.'
+  );
+  assert.equal(
+    PARTICIPANT_SEARCH_COPY.fixedFooterDisclaimer,
+    'Los nombres aparecen recortados, por lo que puede haber más de una persona con coincidencia. Esta lista no es oficial: proviene del archivo publicado por la organizadora y está actualizada al 23/11/2026. Tu captura de pago es tu comprobante.'
+  );
+});
+

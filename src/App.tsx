@@ -464,7 +464,7 @@ export default function App() {
             {/* Canales y Redes del Anuncio Oficial */}
             <div className="mt-10 rounded-3xl border border-[#E9D5FF]/25 bg-[#28094B]/90 p-6 shadow-xl sm:p-8">
               <h3 className="font-display mb-2 text-center text-xl font-black text-[#FACC15] sm:text-2xl">
-                Canales oficiales anunciados
+                Canales oficiales según el anuncio de la organizadora
               </h3>
               <p className="mb-6 text-center text-sm font-medium text-[#E9D5FF]">
                 {UNOFFICIAL_PAGE_COPY.legalPaymentDisclaimer}

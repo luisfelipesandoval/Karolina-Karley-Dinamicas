@@ -3,11 +3,30 @@ export interface ParticipantRecord {
   fullName: string;
 }
 
+export interface ParticipantJsonRecord {
+  nombre: string;
+  tickets: number;
+  ultima_fecha: string;
+  primera_fecha: string;
+}
+
 export interface ParticipantLookupResult {
   status: 'participating' | 'not_found' | 'invalid_query' | 'disabled';
   message: string;
   maskedName?: string;
 }
+
+export const PARTICIPANT_SEARCH_COPY = {
+  helpText:
+    'Escríbelo tal como te sale en tu comprobante de Yape: tu primer nombre y las 3 primeras letras de tu apellido. Ejemplo: Maria Per',
+  minLettersError:
+    'Escribe al menos 3 letras para buscar tu nombre (por ejemplo: Maria Per).',
+  loadError: 'No pudimos cargar la lista, intenta de nuevo',
+  noMatches:
+    'No encontramos ese nombre. Revisa cómo te aparece en tu comprobante de Yape o conserva tu captura de pago.',
+  fixedFooterDisclaimer:
+    'Los nombres aparecen recortados, por lo que puede haber más de una persona con coincidencia. Esta lista no es oficial: proviene del archivo publicado por la organizadora y está actualizada al 23/11/2026. Tu captura de pago es tu comprobante.',
+} as const;
 
 export interface PrizeItem {
   id: string;
@@ -78,21 +97,21 @@ export const OFFICIAL_SOCIAL_LINKS: OfficialSocialLink[] = [
     id: 'instagram-channel',
     platform: 'instagram',
     label: 'Instagram',
-    sublabel: 'Canal oficial',
+    sublabel: 'Canal del anuncio de la organizadora',
     url: 'https://www.instagram.com/channel/AbbqiyhkRSQoUB2c/',
   },
   {
     id: 'whatsapp-channel-1',
     platform: 'whatsapp',
     label: 'WhatsApp · Canal 1',
-    sublabel: 'Canal de difusión',
+    sublabel: 'Canal de difusión anunciado',
     url: 'https://whatsapp.com/channel/0029VbBum7o6RGJQNfeN9o32',
   },
   {
     id: 'whatsapp-channel-2',
     platform: 'whatsapp',
     label: 'WhatsApp · Canal 2',
-    sublabel: 'Canal de difusión',
+    sublabel: 'Canal de difusión anunciado',
     url: 'https://whatsapp.com/channel/0029VbDW25l0LKZ6WPZkLa46',
   },
   {
@@ -332,3 +351,71 @@ export function searchParticipantByExactPhone(
     maskedName: maskParticipantName(exactMatch.fullName),
   };
 }
+
+/**
+ * Normalizes a participant search query or record name:
+ * - Uppercase
+ * - Without tildes/accents on vowels (preserves Ñ)
+ * - Without asterisks (*)
+ * - Without extra spaces (collapses multiple spaces to a single space and trims)
+ */
+export function normalizeParticipantSearchText(input: string): string {
+  return input
+    .toUpperCase()
+    .replace(/Ñ/g, '\u0001')
+    .normalize('NFD')
+    .replace(/[\u0300-\u036f]/g, '')
+    .replace(/\u0001/g, 'Ñ')
+    .replace(/\*/g, '')
+    .replace(/\s+/g, ' ')
+    .trim();
+}
+
+/**
+ * Requires at least 3 letters in the normalized query.
+ */
+export function hasMinimumThreeLetters(input: string): boolean {
+  const normalized = normalizeParticipantSearchText(input);
+  const lettersOnly = normalized.replace(/[^A-ZÑ]/g, '');
+  return lettersOnly.length >= 3;
+}
+
+/**
+ * Determines which JSON file key to load based on the first character of the normalized query:
+ * - If A-Z, returns that single uppercase letter ('A' ... 'Z').
+ * - Otherwise returns 'OTROS'.
+ */
+export function getParticipantFileKey(input: string): string {
+  const normalized = normalizeParticipantSearchText(input);
+  if (!normalized) return 'OTROS';
+  const firstChar = normalized.charAt(0);
+  return /^[A-Z]$/.test(firstChar) ? firstChar : 'OTROS';
+}
+
+/**
+ * Filters participant JSON records whose normalized name starts with the normalized query,
+ * sorts them from highest to lowest number of tickets, and returns at most 10 results.
+ */
+export function filterAndSortParticipants(
+  records: ReadonlyArray<ParticipantJsonRecord>,
+  rawQuery: string
+): ParticipantJsonRecord[] {
+  const normalizedQuery = normalizeParticipantSearchText(rawQuery);
+  if (!hasMinimumThreeLetters(normalizedQuery)) {
+    return [];
+  }
+  const asciiQuery = normalizedQuery.replace(/Ñ/g, 'N');
+
+  return records
+    .filter((record) => {
+      const normalizedName = normalizeParticipantSearchText(record.nombre);
+      if (normalizedName.startsWith(normalizedQuery)) {
+        return true;
+      }
+      const asciiName = normalizedName.replace(/Ñ/g, 'N');
+      return asciiName.startsWith(asciiQuery);
+    })
+    .sort((a, b) => b.tickets - a.tickets)
+    .slice(0, 10);
+}
+
