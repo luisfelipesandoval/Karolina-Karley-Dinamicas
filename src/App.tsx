@@ -19,6 +19,7 @@ import {
   ArrowDown,
   ExternalLink,
   Info,
+  Search,
 } from 'lucide-react';
 import {
   SnowfallOverlay,
@@ -111,6 +112,12 @@ export default function App() {
           className="hidden items-center gap-6 text-sm font-bold text-[#F3E8FF] md:flex"
         >
           <a
+            href="#buscador"
+            className="transition-colors hover:text-[#FACC15] hover:underline whitespace-nowrap shrink-0"
+          >
+            Buscador
+          </a>
+          <a
             href="#como-participar"
             className="transition-colors hover:text-[#FACC15] hover:underline whitespace-nowrap shrink-0"
           >
@@ -129,12 +136,6 @@ export default function App() {
             Verificar
           </a>
           <a
-            href="#buscador"
-            className="transition-colors hover:text-[#FACC15] hover:underline whitespace-nowrap shrink-0"
-          >
-            Buscador
-          </a>
-          <a
             href="#legal"
             className="transition-colors hover:text-[#FACC15] hover:underline whitespace-nowrap shrink-0"
           >
@@ -145,10 +146,10 @@ export default function App() {
         <div className="flex items-center shrink-0">
           <button
             type="button"
-            onClick={() => scrollToSection('premios')}
+            onClick={() => scrollToSection('buscador')}
             className="cursor-pointer rounded-xl bg-[#FACC15] px-4 py-2 text-xs font-black text-[#230B3F] shadow-sm transition-colors hover:bg-[#FDE047] whitespace-nowrap shrink-0 sm:text-sm"
           >
-            Ver premios
+            ¿Estás participando?
           </button>
         </div>
       </header>
@@ -157,7 +158,7 @@ export default function App() {
         {/* 1. CABECERA (HERO) */}
         <section
           id="inicio"
-          className="relative px-4 pt-6 pb-12 text-center sm:px-6 sm:pt-12 sm:pb-16 lg:px-8"
+          className="relative px-4 pt-6 pb-8 text-center sm:px-6 sm:pt-12 sm:pb-12 lg:px-8"
         >
           <div className="relative mx-auto max-w-4xl">
             {/* Corner ornaments (muñeco de nieve & duende) placed in the header corners without covering text */}
@@ -192,12 +193,23 @@ export default function App() {
               </div>
             </div>
 
-            {/* Primary Button "Ver premios" */}
-            <div className="mt-8 flex justify-center">
+            {/* Big Hero CTA Buttons: Primary button to jump straight to "¿Estás participando?" + "Ver premios" */}
+            <div className="mt-8 flex flex-col items-center justify-center gap-4 sm:flex-row">
+              <button
+                type="button"
+                data-testid="hero-go-to-search-button"
+                onClick={() => scrollToSection('buscador')}
+                className="inline-flex w-full cursor-pointer items-center justify-center gap-3 rounded-full border-2 border-white bg-[#FACC15] px-9 py-4 text-lg font-black text-[#230B3F] shadow-2xl transition-transform duration-150 hover:bg-[#FDE047] active:scale-95 whitespace-nowrap shrink-0 sm:w-auto sm:px-10 sm:py-5 sm:text-xl"
+              >
+                <Search className="h-6 w-6 stroke-[2.5] text-[#230B3F]" aria-hidden="true" />
+                <span>¿Estás participando?</span>
+                <ArrowDown className="h-5 w-5 stroke-[2.5] text-[#230B3F]" aria-hidden="true" />
+              </button>
+
               <button
                 type="button"
                 onClick={() => scrollToSection('premios')}
-                className="inline-flex cursor-pointer items-center justify-center gap-3 rounded-full bg-white px-9 py-4 text-lg font-black text-[#230B3F] shadow-xl transition-transform duration-150 hover:bg-[#F3E8FF] active:scale-95 whitespace-nowrap shrink-0 sm:px-10 sm:py-5 sm:text-xl"
+                className="inline-flex w-full cursor-pointer items-center justify-center gap-3 rounded-full bg-white px-8 py-4 text-lg font-black text-[#230B3F] shadow-xl transition-transform duration-150 hover:bg-[#F3E8FF] active:scale-95 whitespace-nowrap shrink-0 sm:w-auto sm:px-9 sm:py-5 sm:text-xl"
               >
                 <Gift className="h-6 w-6 text-[#7E22CE]" aria-hidden="true" />
                 <span>Ver premios</span>
@@ -206,6 +218,9 @@ export default function App() {
             </div>
           </div>
         </section>
+
+        {/* BUSCADOR AL COMIENZO: ¿ESTÁS PARTICIPANDO? */}
+        <ParticipantSearchSection />
 
         {/* 2. CÓMO PARTICIPAR */}
         <section
@@ -390,9 +405,6 @@ export default function App() {
 
         {/* NUEVA SECCIÓN: "Qué dice el anuncio oficial y cómo verificarlo" + Botón "TikTok oficial de Karolina Karley" */}
         <VerificationSection />
-
-        {/* 5. ¿ESTÁS PARTICIPANDO? (BUSCADOR) */}
-        <ParticipantSearchSection />
 
         {/* 6. INFORMACIÓN LEGAL */}
         <section

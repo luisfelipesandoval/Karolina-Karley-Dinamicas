@@ -70,7 +70,7 @@ export const ParticipantSearchSection: React.FC = () => {
     <section
       id="buscador"
       aria-labelledby="buscador-heading"
-      className="px-4 py-12 sm:px-6 lg:px-8"
+      className="scroll-mt-16 px-4 py-10 sm:px-6 lg:px-8"
     >
       <div className="mx-auto max-w-3xl">
         <div className="relative overflow-hidden rounded-3xl border-2 border-[#FACC15] bg-[#3B106C] p-6 shadow-2xl sm:p-10">
